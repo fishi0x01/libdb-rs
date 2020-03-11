@@ -1,7 +1,7 @@
 [package]
 name = "libdb"
 version = "0.1.0"
-authors = ["Jesse Morgan <jesse@jesterpm.net>", "Karl Fischer <fishi0x01@gmail.com>"]
+authors = ["Karl Fischer <fishi0x01@gmail.com>"]
 
 license = "Sleepycat"
 readme = "README.md"

@@ -7,7 +7,7 @@ license = "Sleepycat"
 readme = "README.md"
 
 description = """
-statically linked rust bindings for Berkeley DB"
+statically linked rust bindings for Berkeley DB
 """
 repository = "https://github.com/fishi0x01/libdb-rs"
 keywords = ["static-linking", "berkeley-db"]

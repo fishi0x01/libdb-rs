@@ -1,9 +1,20 @@
-libdb-rs
-=======
+**Status**
 
-Rust bindings for Berkeley DB 4.8.
+![CI](https://github.com/fishi0x01/libdb-rs/workflows/CI/badge.svg)
 
-[![Build Status](https://travis-ci.org/jesterpm/libdb-rs.svg?branch=master)](https://travis-ci.org/jesterpm/libdb-rs)
+# libdb-rs
+
+Statically linked rust bindings for Berkeley DB.
+
+This is a humble fork from [jesterpm's](https://github.com/jesterpm/libdb-rs) libdb-rs.
+
+## Features
+
+`v4_8` uses bindings for Berkeley DB 4.8.x.
+
+`v5_3` uses bindings for Berkeley DB 5.3.x.
+
+By default, Berkeley DB 5.3.x is used. 
 
 ## Example
 
@@ -35,3 +46,20 @@ let result = db.get(None, key.as_mut_slice(), libdb::DB_NONE).unwrap();
 println!("{:?}", result);
 ```
 
+## Berkeley DB licensing notice
+
+Website: http://www.oracle.com/database/berkeley-db/
+
+License: Sleepycat
+
+Description:
+```
+The Berkeley Database (Berkeley DB) is a programmatic toolkit that
+provides embedded database support for both traditional and
+client/server applications. The Berkeley DB includes B+tree, Extended
+Linear Hashing, Fixed and Variable-length record access methods,
+transactions, locking, logging, shared memory caching, and database
+recovery. The Berkeley DB supports C, C++, Java, and Perl APIs. It is
+used by many applications, including Python and Perl, so this should
+be installed on all systems.
+```

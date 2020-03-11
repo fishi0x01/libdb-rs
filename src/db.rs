@@ -8,7 +8,10 @@ use libdb_sys::ffi as db_ffi;
 use super::dbt::DBT;
 use super::error;
 use super::error::Error;
-use super::flags::*;
+
+#[cfg(all(not(feature = "v5_3"), not(feature = "v4_8")))] use super::flags_5_3::Flags;
+#[cfg(feature = "v5_3")] use super::flags_5_3::Flags;
+#[cfg(feature = "v4_8")] use super::flags_4_8::Flags;
 
 pub type Environment = Arc<Env>;
 pub type Database = Arc<Db>;
@@ -34,7 +37,7 @@ impl EnvironmentBuilder {
                 0 => EnvironmentBuilder {
                         env_ptr: env_ptr,
                         home: None,
-                        flags: DB_NONE,
+                        flags: Flags::DB_NONE,
                         mode: 0,
                     },
                 e => panic!("Could not instantiate DB_ENV: {}", e)
@@ -97,8 +100,10 @@ impl Drop for EnvironmentBuilder {
 ///
 /// # Examples
 /// ```
+/// use libdb::Flags;
+///
 /// let ret = libdb::EnvironmentBuilder::new()
-///     .flags(libdb::DB_CREATE | libdb::DB_RECOVER | libdb::DB_INIT_LOG | libdb::DB_INIT_TXN)
+///     .flags(Flags::DB_CREATE | Flags::DB_RECOVER | Flags::DB_INIT_LOG | Flags::DB_INIT_TXN)
 ///     .open();
 /// assert!(ret.is_ok());
 /// ```
@@ -141,11 +146,11 @@ pub enum DbType {
 impl From<DbType> for db_ffi::DBTYPE {
     fn from(flavor: DbType) -> Self {
         match flavor {
-            DbType::BTree => db_ffi::DBTYPE::DB_BTREE,
-            DbType::Hash => db_ffi::DBTYPE::DB_HASH,
-            DbType::Recno => db_ffi::DBTYPE::DB_RECNO,
-            DbType::Queue => db_ffi::DBTYPE::DB_QUEUE,
-            DbType::Any => db_ffi::DBTYPE::DB_UNKNOWN,
+            DbType::BTree => db_ffi::DBTYPE_DB_BTREE,
+            DbType::Hash => db_ffi::DBTYPE_DB_HASH,
+            DbType::Recno => db_ffi::DBTYPE_DB_RECNO,
+            DbType::Queue => db_ffi::DBTYPE_DB_QUEUE,
+            DbType::Any => db_ffi::DBTYPE_DB_UNKNOWN,
         }
     }
 }
@@ -171,7 +176,7 @@ impl<'a> DatabaseBuilder<'a> {
             txn: None,
             file: None,
             name: None,
-            flags: DB_NONE,
+            flags: Flags::DB_NONE,
             mode: 0,
             db_type: DbType::BTree,
         }
@@ -229,7 +234,7 @@ impl<'a> DatabaseBuilder<'a> {
             Some(env) => env.env_ptr,
             None      => ptr::null_mut()
         };
-        
+
         // Get the file name pointer.
         let file_ptr = match self.file.as_ref() {
             Some(cstr) => cstr.as_ptr(),
@@ -269,8 +274,10 @@ impl<'a> DatabaseBuilder<'a> {
 ///
 /// # Examples
 /// ```
+/// use libdb::Flags;
+///
 /// let ret = libdb::DatabaseBuilder::new()
-///     .flags(libdb::DB_CREATE)
+///     .flags(Flags::DB_CREATE)
 ///     .open();
 /// assert!(ret.is_ok())
 /// ```
@@ -287,29 +294,31 @@ impl Db {
     /// # Record Found
     /// ```
     /// # use std::str;
+    /// use libdb::Flags;
     /// # let db = libdb::DatabaseBuilder::new()
-    /// #    .flags(libdb::DB_CREATE)
+    /// #    .flags(Flags::DB_CREATE)
     /// #    .open()
     /// #    .unwrap();
     /// // Note: BDB requires that the key be mutable.
     /// let mut key   = String::from("key").into_bytes();
     /// let mut value = String::from("value").into_bytes();
-    /// assert!(db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE).is_ok());
+    /// assert!(db.put(None, key.as_mut_slice(), value.as_mut_slice(), Flags::DB_NONE).is_ok());
     ///
-    /// let ret = db.get(None, key.as_mut_slice(), libdb::DB_NONE);
+    /// let ret = db.get(None, key.as_mut_slice(), Flags::DB_NONE);
     /// assert!(ret.is_ok());
     /// assert_eq!("value", str::from_utf8(ret.ok().unwrap().unwrap().as_slice()).unwrap());
     /// ```
     ///
     /// ## Record Not Found
     /// ```
+    /// use libdb::Flags;
     /// # let db = libdb::DatabaseBuilder::new()
-    /// #    .flags(libdb::DB_CREATE)
+    /// #    .flags(Flags::DB_CREATE)
     /// #    .open()
     /// #    .unwrap();
     /// // Note: BDB requires that the key be mutable.
     /// let mut key = String::from("key2").into_bytes();
-    /// let ret = db.get(None, key.as_mut_slice(), libdb::DB_NONE);
+    /// let ret = db.get(None, key.as_mut_slice(), Flags::DB_NONE);
     /// println!("{:?}", ret);
     /// assert!(ret.is_ok());
     /// assert!(ret.unwrap().is_none());
@@ -321,7 +330,7 @@ impl Db {
 
         let mut data_dbt: db_ffi::DBT = Default::default();
         data_dbt.flags = db_ffi::DB_DBT_MALLOC;
-        
+
         unsafe {
             match ((*self.db).get.unwrap())(self.db, unwrap_txn_ptr(txn), &mut key_dbt, &mut data_dbt, flags.bits()) {
                 0 => Ok(Some(DBT::from(data_dbt))),
@@ -335,14 +344,16 @@ impl Db {
     ///
     /// # Examples
     /// ```
+    /// use libdb::Flags;
+    ///
     /// # let db = libdb::DatabaseBuilder::new()
-    /// #    .flags(libdb::DB_CREATE)
+    /// #    .flags(Flags::DB_CREATE)
     /// #    .open()
     /// #    .unwrap();
     /// // Note: BDB requires that the key and value be mutable.
     /// let mut key   = String::from("key").into_bytes();
     /// let mut value = String::from("value").into_bytes();
-    /// let ret = db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE);
+    /// let ret = db.put(None, key.as_mut_slice(), value.as_mut_slice(), Flags::DB_NONE);
     /// assert!(ret.is_ok());
     /// ```
     pub fn put(&self, txn: Option<&Transaction>, key: &mut [u8], data: &mut [u8], flags: Flags) -> Result<(), Error> {
@@ -358,6 +369,77 @@ impl Db {
             match ((*self.db).put.unwrap())(self.db, unwrap_txn_ptr(txn), &mut key_dbt, &mut data_dbt, flags.bits()) {
                 0 => Ok(()),
                 e => Err(Error::new(e))
+            }
+        }
+    }
+
+    /// Get a cursor on the database.
+    ///
+    /// # Examples
+    /// ```
+    /// use libdb::Flags;
+    /// # let db = libdb::DatabaseBuilder::new()
+    /// #    .flags(Flags::DB_CREATE)
+    /// #    .open()
+    /// #    .unwrap();
+    /// // Note: BDB requires that the key and value be mutable.
+    /// let mut key   = String::from("key").into_bytes();
+    /// let mut value = String::from("value").into_bytes();
+    /// let ret = db.put(None, key.as_mut_slice(), value.as_mut_slice(), Flags::DB_NONE);
+    /// assert!(ret.is_ok());
+    ///
+    /// // get cursor and iterate
+    /// let mut cursor = db.cursor().expect("Failed to get cursor");
+    /// ```
+    pub fn cursor(&self) -> Result<Cursor, Error> {
+        let mut dbc: db_ffi::DBC = db_ffi::DBC::default();
+        let mut dbc_ptr: *mut db_ffi::DBC = &mut dbc as *mut db_ffi::DBC;
+        unsafe {
+            match ((*self.db).cursor.unwrap())(self.db, ptr::null_mut(), &mut dbc_ptr as *mut *mut db_ffi::DBC, 0) {
+                0 => Ok(Cursor{dbc_ptr}),
+                e => Err(Error::new(e)),
+            }
+        }
+    }
+}
+
+pub struct Cursor {
+    dbc_ptr: *mut db_ffi::DBC,
+}
+
+impl Cursor {
+    /// Iterate over key/data pairs in the database.
+    ///
+    /// # Examples
+    /// ```
+    /// use libdb::Flags;
+    /// # use std::str;
+    /// # let db = libdb::DatabaseBuilder::new()
+    /// #    .flags(Flags::DB_CREATE)
+    /// #    .open()
+    /// #    .unwrap();
+    /// // Note: BDB requires that the key and value be mutable.
+    /// let mut key   = String::from("key").into_bytes();
+    /// let mut value = String::from("value").into_bytes();
+    /// let ret = db.put(None, key.as_mut_slice(), value.as_mut_slice(), Flags::DB_NONE);
+    /// assert!(ret.is_ok());
+    ///
+    /// // get cursor and iterate
+    /// let mut cursor = db.cursor().expect("Failed to get cursor");
+    /// let (key_dbt, data_dbt) = cursor.next().expect("Could not walk cursor");
+    ///     assert_eq!("key", str::from_utf8(key_dbt.unwrap().as_slice()).unwrap());
+    ///     assert_eq!("value", str::from_utf8(data_dbt.unwrap().as_slice()).unwrap());
+    /// ```
+    pub fn next(&mut self) -> Result<(Option<DBT>, Option<DBT>), Error> {
+        let mut key_dbt: db_ffi::DBT = Default::default();
+        key_dbt.flags = db_ffi::DB_DBT_MALLOC;
+
+        let mut data_dbt: db_ffi::DBT = Default::default();
+        data_dbt.flags = db_ffi::DB_DBT_MALLOC;
+        unsafe {
+            match ((*self.dbc_ptr).c_get.unwrap())(self.dbc_ptr, &mut key_dbt, &mut data_dbt, db_ffi::DB_NEXT) {
+                0 => Ok((Some(DBT::from(key_dbt)), Some(DBT::from(data_dbt)))),
+                e => Err(Error::new(e)),
             }
         }
     }

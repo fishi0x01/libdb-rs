@@ -1,6 +1,6 @@
 [package]
 name = "libdb"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Karl Fischer <fishi0x01@gmail.com>"]
 
 license = "Sleepycat"
@@ -17,8 +17,11 @@ categories = ["api-bindings"]
 v5_3 = ["libdb-sys/v5_3"]
 v4_8 = ["libdb-sys/v4_8"]
 
+[badges]
+maintenance = { status = "passively-maintained" }
+
 [dependencies]
 libc = "0.2.67"
 bitflags = "1.2.1"
 tempdir = "0.3"
-libdb-sys = "0.1.0"
+libdb-sys = "0.1.1"

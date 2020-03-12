@@ -1,6 +1,8 @@
 **Status**
 
 ![CI](https://github.com/fishi0x01/libdb-rs/workflows/CI/badge.svg)
+[![crates.io badge](https://img.shields.io/crates/v/libdb.svg)](https://crates.io/crates/libdb)
+[![docs.rs badge](https://docs.rs/libdb/badge.svg)](https://docs.rs/libdb)
 
 # libdb-rs
 
@@ -45,6 +47,13 @@ db.put(None, key.as_mut_slice(), value.as_mut_slice(), libdb::DB_NONE).expect("P
 let result = db.get(None, key.as_mut_slice(), libdb::DB_NONE).unwrap();
 println!("{:?}", result);
 ```
+
+## crev
+
+This crate has its author's [crev review](https://github.com/fishi0x01/crev-proofs).
+
+It is recommended to always use [cargo-crev](https://github.com/crev-dev/cargo-crev)
+to verify the trustworthiness of each of your dependencies, including this one.
 
 ## Berkeley DB licensing notice
 

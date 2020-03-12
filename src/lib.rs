@@ -1,4 +1,4 @@
-//! Rust bindings for Berkeley DB 4.8.
+//! Rust bindings for Berkeley DB
 //!
 //! # Examples
 //! ```
